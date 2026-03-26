@@ -11,7 +11,7 @@ $(function() {
     "AI", "Agentic AI", "One Team", "Remote Work", "Sales",
     "Original Taste", "Route Ride",
     "Q1", "Q2", "Q3", "Q4", "Security",
-    "Cybersecurity", "Synergy", "Email", "Phishing", "Company",
+    "Cyber security", "Synergy", "Email", "Phishing", "Company",
     "Market", "KnowBe4", "People & Culture", "Tableau", "Circle Back", "Priority",
     // More
     "Teams", "CoPilot", "Business", "Market Street Challenge",
