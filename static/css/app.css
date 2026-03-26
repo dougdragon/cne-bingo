@@ -1,0 +1,22 @@
+.bingo-header {
+    padding:15px;
+}
+.bingo-tile {
+    display: table;
+    padding:0px !important;
+    cursor: pointer;
+}
+.bingo-tile span {
+    line-height: normal;
+    display: table-cell;
+    vertical-align: middle;
+}
+.uk-panel-box-primary.block-locked {
+    background: #6CC644 !important;
+    color: #FFF !important;
+    cursor: default;
+}
+.uk-panel-box-primary {
+    color: #FFF !important;
+    background: #39F !important
+}

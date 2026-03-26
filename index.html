@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+    <head>
+        <!-- Bingo App made for fun and love by John Norton -->
+        <title>Bingo!</title>
+        <link rel="stylesheet" href="static/uikit-2.22.0/css/uikit.almost-flat.min.css" />
+        <link rel="stylesheet" href="static/css/app.css" />
+        <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script type="text/javascript" src="static/uikit-2.22.0/js/uikit.min.js"></script>
+        <script type="text/javascript" src="static/js/app.js"></script>
+    </head>
+    <body>
+        <div id="wrapper" class="uk-container uk-container-center">
+            <header class="bingo-header uk-block uk-block-secondary uk-contrast">
+                <h1 class="uk-h1 uk-margin-bottom-remove">Bingo! - Hear the word. Tap the word.</h1>
+            </header>
+            <div class="uk-margin-top">
+                <div class="bingo-sheet uk-grid uk-grid-collapse uk-grid-match uk-text-center" data-uk-grid-match="{target:'.uk-panel'}">
+                </div>
+            </div>
+        </div>
+        <div id="victory" class="uk-text-center uk-margin-large-top uk-margin-large-bottom uk-text-large">
+            <p>Your First win will be recorded below with a timestamp!</p>
+        </div>
+
+        <div id="victory_box" class="uk-modal">
+            <div class="uk-modal-dialog">
+                <a class="uk-modal-close uk-close"></a>
+                <div class="uk-modal-header">
+                    <h2>Congratulations!</h2>
+                </div>
+                <p>Looks like you just won! We marked down your winning time but
+                don't stop there! Can you fill the whole board?</p>
+
+                <p>Your winning time is:</p>
+                <div id="victory_modal"></div>
+            </div>
+        </div>
+    </body>
+</html>
