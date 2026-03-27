@@ -1,40 +1,247 @@
-<!doctype html>
-<html>
-    <head>
-        <!-- Bingo App made for fun and love by John Norton -->
-        <title>Bingo!</title>
-        <link rel="stylesheet" href="static/uikit-2.22.0/css/uikit.almost-flat.min.css" />
-        <link rel="stylesheet" href="static/css/app.css" />
-        <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-        <script type="text/javascript" src="static/uikit-2.22.0/js/uikit.min.js"></script>
-        <script type="text/javascript" src="static/js/app.js"></script>
-    </head>
-    <body>
-        <div id="wrapper" class="uk-container uk-container-center">
-            <header class="bingo-header uk-block uk-block-secondary uk-contrast">
-                <h1 class="uk-h1 uk-margin-bottom-remove">Bingo! - Hear the word. Tap the word.</h1>
-            </header>
-            <div class="uk-margin-top">
-                <div class="bingo-sheet uk-grid uk-grid-collapse uk-grid-match uk-text-center" data-uk-grid-match="{target:'.uk-panel'}">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Buzzword Bingo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.21.13/dist/css/uikit.min.css" />
+    <style>
+        :root { --bingo-red: #f40009; }
+        .bingo-card {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid #e5e5e5;
+        }
+        .bingo-card:hover {
+            background: #f8f8f8;
+            transform: scale(1.02);
+            z-index: 1;
+        }
+        .bingo-card.is-checked {
+            background-color: var(--bingo-red) !important;
+            color: white !important;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+        .free-space { background-color: #eee; font-style: italic; }
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .win-animation {
+            animation: celebrate 0.5s ease infinite;
+            border: 2px solid gold !important;
+        }
+        /* Mobile specific tweaks */
+        @media (max-width: 640px) {
+            .bingo-card {
+                min-height: 70px; /* Shorter tiles on mobile */
+                font-size: 0.75rem; /* Smaller text */
+                line-height: 1.2;
+            }
+            .uk-padding-small {
+                padding: 5px !important; /* Tighten up the padding */
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
+</head>
+<body class="uk-background-muted uk-height-viewport">
+
+<div class="uk-section uk-section-small uk-container uk-container-small">
+    <header class="uk-text-center uk-margin-medium-bottom">
+        <h1 class="uk-heading-small">Buzzword Bingo</h1>
+        <p class="uk-text-meta">Hear the word, tap the card. Progress is saved automatically.</p>
+        <button class="uk-button uk-button-default uk-button-small" uk-tooltip="title: Will reset the cache; pos: bottom" onclick="resetGame()">Reset Board</button>
+    </header>
+
+        <div id="bingo-grid" class="uk-grid-collapse uk-child-width-1-5 uk-text-center" uk-grid></div>
+
+    <div id="win-message" class="uk-alert-success uk-margin-medium-top uk-hidden" uk-alert>
+        <p class="uk-text-center"><strong>BINGO!</strong> You've completed a line! (Winner recorded at <span id="win-time"></span>)</p>
+    </div>
+</div>
+
+<div id="paco-modal" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-width-auto uk-margin-auto-vertical">
+        <button class="uk-modal-close-default" type="button" uk-close></button>
+        <div class="uk-modal-body uk-padding-remove uk-text-center">
+            <img src="https://pacotaco.dougdragon.com/pacotaco.png"
+                 alt="Paco Taco"
+                 style="display: block;
+                        max-width: 90vw;
+                        max-height: 80vh;
+                        width: auto;
+                        height: auto;
+                        margin: 0 auto;
+                        border-radius: 4px;">
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/uikit@3.21.13/dist/js/uikit.min.js"></script>
+<script>
+    const WORDS = [
+        "Synergy",
+        "Next Steps",
+        "Deep Dive",
+        "Coke Zero",
+        "Logistics",
+        "Optimization",
+        "Market Share",
+        "Bottling",
+        "Quarterly",
+        "Sustainability",
+        "Innovation",
+        "Partnership",
+        "Scalability",
+        "Customer First",
+        "Supply Chain",
+        "Efficiency",
+        "Growth",
+        "Engagement",
+        "Alignment",
+        "Inventory",
+        "Legacy",
+        "Ecosystem",
+        "Paradigm",
+        "Brand Equity"
+    ];
+    let gameState = {
+        cells: [],
+        hasWon: false,
+        winTime: null
+    };
+
+    function initGame() {
+        const saved = localStorage.getItem('bingo_coke_northeast');
+        if (saved) {
+            gameState = JSON.parse(saved);
+        } else {
+            generateNewBoard();
+        }
+        renderBoard();
+    }
+
+    function generateNewBoard() {
+        // Shuffle words and take first 24
+        const shuffled = [...WORDS].sort(() => 0.5 - Math.random()).slice(0, 24);
+        gameState.cells = shuffled.map((text, index) => ({ text, checked: false }));
+        // Insert Free Space at index 12 (middle)
+        gameState.cells.splice(12, 0, { text: "FREE SPACE", checked: true, isFree: true });
+        gameState.hasWon = false;
+        saveState();
+    }
+
+    function toggleCell(index) {
+        if (gameState.cells[index].isFree) {
+            UIkit.modal('#paco-modal').show(); // Easter egg
+            return;
+        }
+
+        gameState.cells[index].checked = !gameState.cells[index].checked;
+        checkWin();
+        saveState();
+        renderBoard();
+    }
+
+    function checkWin() {
+        const size = 5;
+        const cells = gameState.cells;
+        const winningLines = [];
+
+        // 1. Generate Rows (0-4, 5-9, etc.)
+        for (let i = 0; i < size; i++) {
+            let row = [];
+            for (let j = 0; j < size; j++) row.push(i * size + j);
+            winningLines.push(row);
+        }
+
+        // 2. Generate Columns (0,5,10,15,20, etc.)
+        for (let i = 0; i < size; i++) {
+            let col = [];
+            for (let j = 0; j < size; j++) col.push(i + j * size);
+            winningLines.push(col);
+        }
+
+        // 3. Generate Diagonals
+        let diag1 = []; // Top-left to bottom-right (0, 6, 12, 18, 24)
+        let diag2 = []; // Top-right to bottom-left (4, 8, 12, 16, 20)
+        for (let i = 0; i < size; i++) {
+            diag1.push(i * size + i);
+            diag2.push((i + 1) * size - (i + 1));
+        }
+        winningLines.push(diag1, diag2);
+
+        // 4. Check if any line is fully checked
+        const isWin = winningLines.some(line =>
+            line.every(index => cells[index].checked)
+        );
+
+        if (isWin && !gameState.hasWon) {
+            // Winner winner chicken dinner
+            gameState.hasWon = true;
+            gameState.winTime = new Date().toLocaleTimeString();
+            // I'm havin' fun here
+            confetti({particleCount: 200, gravity: 0.5});
+        } else if (!isWin) {
+            // If they uncheck a tile and no longer have a full line
+            gameState.hasWon = false;
+            gameState.winTime = null;
+        }
+    }
+
+    function saveState() {
+        localStorage.setItem('bingo_coke_northeast', JSON.stringify(gameState));
+    }
+
+    function renderBoard() {
+        const grid = document.getElementById('bingo-grid');
+
+        // We map through the cells to create the HTML string
+        grid.innerHTML = gameState.cells.map((cell, i) => `
+            <div>
+                <div onclick="toggleCell(${i})"
+                        class="uk-card uk-card-default bingo-card
+                            ${cell.checked ? 'is-checked' : ''}
+                            ${cell.isFree ? 'free-space' : ''}
+                            ${gameState.hasWon ? 'win-animation' : ''}">
+                    <div class="uk-padding-small">${cell.text}</div>
                 </div>
             </div>
-        </div>
-        <div id="victory" class="uk-text-center uk-margin-large-top uk-margin-large-bottom uk-text-large">
-            <p>Your First win will be recorded below with a timestamp!</p>
-        </div>
+        `).join('');
 
-        <div id="victory_box" class="uk-modal">
-            <div class="uk-modal-dialog">
-                <a class="uk-modal-close uk-close"></a>
-                <div class="uk-modal-header">
-                    <h2>Congratulations!</h2>
-                </div>
-                <p>Looks like you just won! We marked down your winning time but
-                don't stop there! Can you fill the whole board?</p>
+        // Handle the win message visibility
+        const winMsg = document.getElementById('win-message');
+        if (gameState.hasWon) {
+            winMsg.classList.remove('uk-hidden');
+            document.getElementById('win-time').innerText = gameState.winTime;
+        } else {
+            winMsg.classList.add('uk-hidden');
+        }
+    }
+    function resetGame() {
+        // If the user has won, don't ask them if
+        // they're sure they want to reset the board
+        if (gameState.hasWon) {
+            generateNewBoard();
+            renderBoard();
+        } else {
+            if (confirm("Reset the board and lose your progress?")) {
+                localStorage.removeItem('bingo_coke_northeast');
+                generateNewBoard();
+                renderBoard();
+            }
+        }
+    }
 
-                <p>Your winning time is:</p>
-                <div id="victory_modal"></div>
-            </div>
-        </div>
-    </body>
+    initGame();
+</script>
+</body>
 </html>
