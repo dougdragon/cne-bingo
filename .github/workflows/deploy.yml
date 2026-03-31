@@ -19,9 +19,10 @@ jobs:
                 username: ${{ secrets.SSH_USER }}
                 key: ${{ secrets.SSH_PRIVATE_KEY }}
                 port: 22
-                fingerprint: ${{ secrets.SSH_FINGERPRINT }}
-                script_stop: true
+                fingerprint: ""
+                debug: true
                 script: |
                     cd bingo.dougdragon.com/cokenortheast/cne-bingo
+                    cd /home/${{ secrets.SSH_USERNAME }}/bingo.dougdragon.com/cokenortheast/cne-bingo
                     git pull origin main
                     echo "Deployment successful."
