@@ -22,6 +22,9 @@ jobs:
                 fingerprint: ""
                 debug: true
                 script: |
-                    cd bingo.dougdragon.com/cokenortheast/cne-bingo
+                    pwd
+                    cd bingo.dougdragon.com
+                    cd cokenortheast
+                    cd cne-bingo
                     git pull origin main
                     echo "Deployment successful."
