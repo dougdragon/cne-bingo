@@ -19,6 +19,7 @@ jobs:
                 username: ${{ secrets.SSH_USER }}
                 key: ${{ secrets.SSH_PRIVATE_KEY }}
                 port: 22
+                fingerprint: ${{ secrets.SSH_FINGERPRINT }}
                 script: |
                     cd bingo.dougdragon.com/cokenortheast/cne-bingo
                     git pull origin main
