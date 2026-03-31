@@ -23,6 +23,5 @@ jobs:
                 debug: true
                 script: |
                     cd bingo.dougdragon.com/cokenortheast/cne-bingo
-                    cd /home/${{ secrets.SSH_USER }}/bingo.dougdragon.com/cokenortheast/cne-bingo
                     git pull origin main
                     echo "Deployment successful."
