@@ -87,51 +87,24 @@
 
 <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.13/dist/js/uikit.min.js"></script>
 <script>
-    const WORDS = [
-        "AI",
-        "Agentic AI",
-        "One Team",
-        "Original Taste",
-        "Cyber security",
-        "Tableau",
-        "CoPilot",
-        "FIFA",
-        "Snowflake",
-        "SnowSquall",
-        "Monster",
-        "Phishing",
-        "Synergy",
-        "Next Steps",
-        "Deep Dive",
-        "Coke Zero",
-        "Original Taste",
-        "Diet Coke",
-        "Competition",
-        "Driver",
-        "Truck",
-        "RED",
-        "CONA",
-        "Logistics",
-        "Optimization",
-        "Market Share",
-        "Bottling",
-        "Quarterly",
-        "Sustainability",
-        "Innovation",
-        "Partnership",
-        "Scalability",
-        "Customer First",
-        "Supply Chain",
-        "Efficiency",
-        "Growth",
-        "Engagement",
-        "Alignment",
-        "Inventory",
-        "Legacy",
-        "Ecosystem",
-        "Paradigm",
-        "Brand Equity"
-    ];
+    let globalBuzzwords = [];
+
+    async function initializeGame() {
+        try {
+            const response = await fetch('words/api.php');
+            const jsonResponse = await response.json();
+            globalBuzzwords = jsonResponse['words'];
+
+            // Only generate a new board if one doesn't exist in localStorage
+            if (!localStorage.getItem('bingo_coke_northeast')) {
+                generateNewBoard(globalBuzzwords);
+                renderBoard();
+            }
+        } catch (error) {
+            console.error('Could not load buzzwords', error);
+        }
+    }
+
     let gameState = {
         cells: [],
         hasWon: false,
@@ -142,16 +115,22 @@
         const saved = localStorage.getItem('bingo_coke_northeast');
         if (saved) {
             gameState = JSON.parse(saved);
-        } else {
-            generateNewBoard();
+            renderBoard();
         }
-        renderBoard();
+
+        // Always fetch the latest words for the global list
+        initializeGame();
     }
 
-    function generateNewBoard() {
+    function generateNewBoard(wordsList) {
+        if (!wordsList || wordsList.length < 24) {
+            console.error('Not enough words to generate a board.');
+            return;
+        }
+
         // Shuffle words and take first 24
-        const shuffled = [...WORDS].sort(() => 0.5 - Math.random()).slice(0, 24);
-        gameState.cells = shuffled.map((text, index) => ({ text, checked: false }));
+        const shuffled = [...wordsList].sort(() => 0.5 - Math.random()).slice(0, 24);
+        gameState.cells = shuffled.map((text) => ({ text, checked: false }));
         // Insert Free Space at index 12 (middle)
         gameState.cells.splice(12, 0, { text: "FREE SPACE", checked: true, isFree: true });
         gameState.hasWon = false;
@@ -249,12 +228,12 @@
         // If the user has won, don't ask them if
         // they're sure they want to reset the board
         if (gameState.hasWon) {
-            generateNewBoard();
+            generateNewBoard(globalBuzzwords);
             renderBoard();
         } else {
             if (confirm("Reset the board and lose your progress?")) {
                 localStorage.removeItem('bingo_coke_northeast');
-                generateNewBoard();
+                generateNewBoard(globalBuzzwords);
                 renderBoard();
             }
         }
