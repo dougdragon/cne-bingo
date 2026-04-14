@@ -224,18 +224,23 @@
             winMsg.classList.add('uk-hidden');
         }
     }
-    function resetGame() {
-        // If the user has won, don't ask them if
-        // they're sure they want to reset the board
+    async function resetGame() {
+        // If the user has won, don't ask them to confirm resetting the board
         if (gameState.hasWon) {
             generateNewBoard(globalBuzzwords);
             renderBoard();
-        } else {
-            if (confirm("Reset the board and lose your progress?")) {
-                localStorage.removeItem('bingo_coke_northeast');
-                generateNewBoard(globalBuzzwords);
-                renderBoard();
-            }
+	        return;
+        }
+        try {
+            await UIkit.modal.confirm(
+                '<p class="uk-text-lead">Reset your bingo board?</p><p>This will clear your current progress and generate a new set of words.</p>',
+                { stack: true }
+            );
+            localStorage.removeItem('bingo_coke_northeast');
+            generateNewBoard(globalBuzzwords);
+            renderBoard();
+        } catch (e) {
+            // user clicks 'Cancel' or closes the modal
         }
     }
 
